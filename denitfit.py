@@ -2,11 +2,13 @@
 #0.1 20210216 Ported MATLAB code to Python
 #0.2 20210420 Removed computation of CIs for rates, which doesn't work for Nar and Nir strains because only one parameter is varied/fit.
 #0.2 20210421 Updated fitYields to fit an intercept as well, and treat Nar/Nir, Nar, and Nir differently. Changed CI to 68% (comparable to 1 standard error)
+#0.2.1 20210428 Added the computation of R2 to fityields. Added a function to compute the RMSE of a global fit.
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from lmfit import Minimizer, conf_interval
 import statsmodels.api as sm
+from sklearn.metrics import r2_score
 import copy
 
 class experiment:
@@ -52,6 +54,10 @@ def fitYields(experiments):
     res = mod.fit()
     ci = res.conf_int(0.32)   # 68% confidence interval. comparable to 1 standard error
     
+    #compute R2
+    DelOD_pred = res.predict()
+    r2 = r2_score(DelOD,DelOD_pred)
+    
     if experiments[0].phen == 'Nar/Nir':
         gamA = res.params[0]
         gamI = res.params[1]
@@ -64,7 +70,7 @@ def fitYields(experiments):
         gamI = res.params[0]
         ci = np.array((np.zeros(2),ci[0],ci[1]))
 
-    return gamA, gamI, ci
+    return gamA, gamI, ci, r2
         
 def fitRates(params,experiments,n=1):
     fitter = Minimizer(residualGlobLMFit, params, fcn_args=(experiments,))
@@ -127,6 +133,10 @@ def residualGlob(p,experiments,n=1):
     for i in range(0,len(experiments)):
         res_out = np.append(res_out,residual(p,experiments[i],n))
     return res_out
+
+def RMSE(p,experiments,n=1):
+    rmse_out = np.sqrt(np.mean((residualGlob(p,experiments,n))**2))
+    return rmse_out
 
 def residual(p,experiment,n=1):
     #Compute the residual vector for the A and I variables using the replicate measurements taken in a given condition
