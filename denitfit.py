@@ -3,6 +3,8 @@
 #0.2 20210420 Removed computation of CIs for rates, which doesn't work for Nar and Nir strains because only one parameter is varied/fit.
 #0.2 20210421 Updated fitYields to fit an intercept as well, and treat Nar/Nir, Nar, and Nir differently. Changed CI to 68% (comparable to 1 standard error)
 #0.2.1 20210428 Added the computation of R2 to fityields. Added a function to compute the RMSE of a global fit.
+#0.2.2 20210609 Removed nan values from residuals before fitting.
+
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
@@ -143,7 +145,9 @@ def residual(p,experiment,n=1):
     y0 = np.append(experiment.N0, [np.nanmedian(experiment.A[:,0]), np.nanmedian(experiment.I[:,0])])
 #     y0 = np.append(experiment.N0, [experiment.A0, experiment.I0])
     yh = denitODE(y0,experiment.t,p,n)
-    return np.ravel([experiment.A-yh[:,-2],experiment.I-yh[:,-1]])
+    res = np.ravel([experiment.A-yh[:,-2],experiment.I-yh[:,-1]])
+    res = res[~np.isnan(res)] #remove any nan elements
+    return res
 
 def denitODE(y0,t,p,n=1):
     sol = odeint(F, y0, t, Dfun=J, args=(p,n), rtol=1e-6)
