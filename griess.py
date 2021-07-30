@@ -52,7 +52,11 @@ def read_griess(meta_fn,data_fn=None,data_540_fn=None,data_900_fn=None):
         data_out = data_out['540'] #pick out 540 nm measurement
     elif (data_540_fn != None) & (data_900_fn != None): #case 3
         bub_900 = find_outliers(data_900)
-        data_540[bub_900] = np.NaN #Set bubbles to NaN
+        for row in data_540.index:
+            if sum(np.isnan(bub_900.loc[row])) < 4:
+                data_540.loc[row][bub_900.loc[row]] = np.NaN #Set bubbles to NaN
+            else:
+                data_540.loc[row] = data_540.loc[row] - data_900.loc[row]
         data_out = data_540.median(axis=1)
         data_out = data_out.rename("540")
         
