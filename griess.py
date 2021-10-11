@@ -109,9 +109,11 @@ def fit_griess(meta_fn,no2_fn,no2no3_fn=None,no2no3_540_fn=None,no2no3_900_fn=No
 
 def invert_griess(no2,fit,no2no3=None):
     #Returns inferred concentrations
+    no2 = no2 - fit[0][0] #subtract blank
     NO2 = ((-fit[1][1] + np.sqrt(fit[1][1]**2 - 4*(fit[1][0]-no2)*fit[1][2]))/2/fit[1][2]).rename("NO2"); #solve quadratic formula
     NO2[NO2<0] = 0.0
     if isinstance(no2no3,pd.Series):
+        no2no3 = no2no3 - fit[0][1] #subtract blank
         NO3 = (((-fit[2][1] + np.sqrt(fit[2][1]**2 - 4*(fit[2][0]-no2no3)*fit[2][2]))/2/fit[2][2]) - NO2).rename("NO3"); #solve quadratic formula
         NO3[NO3<0] = 0.0
     else:
