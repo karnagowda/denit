@@ -1,5 +1,5 @@
 #Karna Gowda
-#0.0.1
+#0.0.2 20220603 Removed usage of pandas append, changed to concat.
 
 import bmgdata as bd
 import pandas as pd
@@ -120,6 +120,5 @@ def invert_griess(no2,fit,no2no3=None):
         NO3 = NO2.copy().rename("NO3")
         NO3[NO3!=0] = 0.0
 
-    data_out = pd.DataFrame()
-    data_out = data_out.append([NO2,NO3]).transpose()
+    data_out = pd.concat((NO2,NO3),axis=1)
     return data_out
